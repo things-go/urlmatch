@@ -169,53 +169,6 @@ func TestRouterNotFound(t *testing.T) {
 	}
 }
 
-func TestRouter_Match(t *testing.T) {
-	type fields struct {
-		trees                 map[string]*node
-		paramsNew             func() *Params
-		maxParams             uint16
-		SaveMatchedRoutePath  bool
-		RedirectTrailingSlash bool
-		RedirectFixedPath     bool
-	}
-	type args struct {
-		method string
-		path   string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   interface{}
-		want1  Params
-		want2  bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &Router{
-				trees:                 tt.fields.trees,
-				paramsNew:             tt.fields.paramsNew,
-				maxParams:             tt.fields.maxParams,
-				SaveMatchedRoutePath:  tt.fields.SaveMatchedRoutePath,
-				RedirectTrailingSlash: tt.fields.RedirectTrailingSlash,
-				RedirectFixedPath:     tt.fields.RedirectFixedPath,
-			}
-			got, got1, got2 := r.Match(tt.args.method, tt.args.path)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Match() got = %v, want %v", got, tt.want)
-			}
-			if !reflect.DeepEqual(got1, tt.want1) {
-				t.Errorf("Match() got1 = %v, want %v", got1, tt.want1)
-			}
-			if got2 != tt.want2 {
-				t.Errorf("Match() got2 = %v, want %v", got2, tt.want2)
-			}
-		})
-	}
-}
-
 func TestRouterLookup(t *testing.T) {
 	wantHandle := struct{}{}
 	wantParams := Params{Param{"name", "gopher"}}

@@ -121,6 +121,7 @@ type Router struct {
 	// before invoking the handler.
 	// The matched route path is only added to handlers of routes that were
 	// registered when this option was enabled.
+	// TODO: implement
 	SaveMatchedRoutePath bool
 
 	// Enables automatic redirection if the current route can't be matched but a

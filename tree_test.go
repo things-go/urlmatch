@@ -12,15 +12,17 @@ import (
 	"testing"
 )
 
-func printChildren(n *node, prefix string) {
-	// fmt.Printf(" %02d %s%s[%d] %v %t %d \r\n", n.priority, prefix, n.path, len(n.children), n.value, n.wildChild, n.nType)
-	// for l := len(n.path); l > 0; l-- {
-	// 	prefix += " "
-	// }
-	// for _, child := range n.children {
-	// 	printChildren(child, prefix)
-	// }
-}
+func printChildren(*node, string) {}
+
+// func printChildren(n *node, prefix string) {
+// fmt.Printf(" %02d %s%s[%d] %v %t %d \r\n", n.priority, prefix, n.path, len(n.children), n.value, n.wildChild, n.nType)
+// for l := len(n.path); l > 0; l-- {
+// 	prefix += " "
+// }
+// for _, child := range n.children {
+// 	printChildren(child, prefix)
+// }
+// }
 
 type testRequests []struct {
 	path       string
@@ -318,17 +320,22 @@ func TestTreeCatchAllConflict(t *testing.T) {
 }
 
 func TestTreeCatchAllConflictRoot(t *testing.T) {
-	routes := []testRoute{
-		{"/", false},
-		{"/*filepath", true},
-	}
-	testRoutes(t, routes)
+	t.Run("catch all conflict root", func(t *testing.T) {
+		routes := []testRoute{
+			{"/", false},
+			{"/*filepath", true},
+		}
+		testRoutes(t, routes)
+	})
 }
 
 func TestTreeCatchMaxParams(t *testing.T) {
-	tree := &node{}
-	var route = "/cmd/*filepath"
-	tree.addRoute(route, route)
+	t.Run("catch max params", func(t *testing.T) {
+		tree := &node{}
+		var route = "/cmd/*filepath"
+		tree.addRoute(route, route)
+	})
+
 }
 
 func TestTreeDoubleWildcard(t *testing.T) {

@@ -28,6 +28,7 @@ This is just a quick introduction, view the [Go.Dev](https://pkg.go.dev/github.c
 
 Let's start with a trivial example:
 
+[embedmd]:# (_example/main.go go)
 ```go
 package main
 
@@ -53,7 +54,6 @@ func main() {
 		log.Println(ps.Param("name"))
 	}
 }
-
 ```
 
 ### Named parameters
