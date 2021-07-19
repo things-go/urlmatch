@@ -1,15 +1,60 @@
 # urlmatch
 
-urlmatch is a trie match url.
+urlmatch is a trie match url. Copy from [httprouter](https://github.com/julienschmidt/httprouter) but just for match url.
 
 [![GoDoc](https://godoc.org/github.com/things-go/urlmatch?status.svg)](https://godoc.org/github.com/things-go/urlmatch)
 [![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/github.com/things-go/urlmatch?tab=doc)
-[![Build Status](https://www.travis-ci.com/things-go/urlmatch.svg?branch=master)](https://www.travis-ci.com/things-go/urlmatch)
-[![codecov](https://codecov.io/gh/things-go/urlmatch/branch/master/graph/badge.svg)](https://codecov.io/gh/things-go/urlmatch)
+[![Build Status](https://www.travis-ci.com/things-go/urlmatch.svg?branch=main)](https://www.travis-ci.com/things-go/urlmatch)
+[![codecov](https://codecov.io/gh/things-go/urlmatch/branch/main/graph/badge.svg)](https://codecov.io/gh/things-go/urlmatch)
 ![Action Status](https://github.com/things-go/urlmatch/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/things-go/urlmatch)](https://goreportcard.com/report/github.com/things-go/urlmatch)
-[![License](https://img.shields.io/github/license/things-go/urlmatch)](https://github.com/things-go/urlmatch/raw/master/LICENSE)
+[![License](https://img.shields.io/github/license/things-go/urlmatch)](https://github.com/things-go/urlmatch/raw/main/LICENSE)
 [![Tag](https://img.shields.io/github/v/tag/things-go/urlmatch)](https://github.com/things-go/urlmatch/tags)
+
+## Features
+
+**Only explicit matches: a requested URL path could match multiple patterns. Therefore they have some awkward pattern priority rules, like *longest match* or *first registered, first matched*. By design of this router, a request can only match exactly one or no route. As a result, there are also no unintended matches, which makes it great for SEO and improves the user experience.
+
+**Stop caring about trailing slashes:** Choose the URL style you like, the router automatically redirects the client if a trailing slash is missing or if there is one extra. Of course it only does so, if the new path has a handler. If you don't like it, you can [turn off this behavior](https://pkg.go.dev/github.com/things-go/urlmatch#Router.RedirectTrailingSlash).
+
+**Path auto-correction:** Besides detecting the missing or additional trailing slash at no extra cost, the router can also fix wrong cases and remove superfluous path elements (like `../` or `//`). Is [CAPTAIN CAPS LOCK](http://www.urbandictionary.com/define.php?term=Captain+Caps+Lock) one of your users? HttpRouter can help him by making a case-insensitive look-up and redirecting him to the correct URL.
+
+**Parameters in your routing pattern:** Stop parsing the requested URL path, just give the path segment a name and the router delivers the dynamic value to you. Because of the design of the router, path parameters are very cheap.
+
+
+## Usage
+
+This is just a quick introduction, view the [Go.Dev](https://pkg.go.dev/github.com/things-go/urlmatch?tab=doc) for details.
+
+Let's start with a trivial example:
+
+```go
+package main
+
+import (
+	"log"
+	"net/http"
+
+	"github.com/things-go/urlmatch"
+)
+
+func main() {
+	router := urlmatch.New()
+	router.GET("/", "/")
+	router.GET("/hello/:name", "Hello")
+
+	v, _, matched := router.Match(http.MethodGet, "/")
+	if matched {
+		log.Println(v)
+	}
+	v, ps, matched := router.Match(http.MethodGet, "/hello/myname")
+	if matched {
+		log.Println(v)
+		log.Println(ps.Param("name"))
+	}
+}
+
+```
 
 ### Named parameters
 
