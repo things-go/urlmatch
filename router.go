@@ -9,19 +9,9 @@
 //  package main
 //
 //  import (
-//      "fmt"
 //      "github.com/things-go/urlmatch"
-//      "net/http"
 //      "log"
 //  )
-//
-//  func Index(w http.ResponseWriter, r *http.Request, _ urlmatch.Params) {
-//      fmt.Fprint(w, "Welcome!\n")
-//  }
-//
-//  func Hello(w http.ResponseWriter, r *http.Request, ps urlmatch.Params) {
-//      fmt.Fprintf(w, "hello, %s!\n", ps.Param("name"))
-//  }
 //
 //  func main() {
 //      router := urlmatch.New()
@@ -30,12 +20,12 @@
 //
 //      v, _, matched := router.Match(http.MethodGet, "/")
 //      if matched {
-//          fmt.Println(v)
+//          log.Println(v)
 //      }
 //      v, ps, matched := router.Match(http.MethodGet, "/hello/myname")
 //      if matched {
-//          fmt.Println(v)
-//          fmt.Println(ps.Param("name"))
+//          log.Println(v)
+//          log.Println(ps.Param("name"))
 //      }
 //  }
 //
