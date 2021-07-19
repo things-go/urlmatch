@@ -77,8 +77,14 @@ import (
 )
 
 // MatchedRoutePathParam is the Param name under which the path of the matched
-// route is stored, if Router.SaveMatchedRoutePath is set.
-// var MatchedRoutePathParam = "$matchedRoutePath"
+// route is stored, if Router.saveMatchedRoutePath is set.
+var MatchedRoutePathParam = "$matchedRoutePath"
+
+// matchValue store matchedPath and real value when Router.saveMatchedRoutePath = true.
+type matchValue struct {
+	matchedPath string
+	Value       interface{}
+}
 
 // Param is a single URL parameter, consisting of a key and a value.
 type Param struct {
@@ -103,11 +109,11 @@ func (ps Params) Param(name string) string {
 }
 
 // MatchedRoutePath retrieves the path of the matched route.
-// Router.SaveMatchedRoutePath must have been enabled when the respective
+// Router.saveMatchedRoutePath must have been enabled when the respective
 // handler was added, otherwise this function always returns an empty string.
-// func (ps Params) MatchedRoutePath() string {
-// 	return ps.Param(MatchedRoutePathParam)
-// }
+func (ps Params) MatchedRoutePath() string {
+	return ps.Param(MatchedRoutePathParam)
+}
 
 // Router is a http.Handler which can be used to dispatch requests to different
 // handler functions via configurable routes
@@ -117,19 +123,17 @@ type Router struct {
 	paramsNew func() *Params
 	maxParams uint16
 
-	// If enabled, adds the matched route path onto the http.Request context
-	// before invoking the handler.
-	// The matched route path is only added to handlers of routes that were
+	// If enabled, adds the matched route path onto the Params.
+	// The matched route path is only added to Params of routes that were
 	// registered when this option was enabled.
-	// TODO: implement
-	SaveMatchedRoutePath bool
+	saveMatchedRoutePath bool
 
 	// Enables automatic redirection if the current route can't be matched but a
 	// value for the path with (without) the trailing slash exists.
 	// For example if /foo/ is requested but a route only exists for /foo, the
 	// client is redirected to /foo with http status code 301 for GET requests
 	// and 308 for all other request methods.
-	RedirectTrailingSlash bool
+	redirectTrailingSlash bool
 
 	// If enabled, the router tries to fix the current request path, if no
 	// value is registered for it.
@@ -139,17 +143,52 @@ type Router struct {
 	// to the corrected path with status code 301 for GET requests and 308 for
 	// all other request methods.
 	// For example /FOO and /..//Foo could be redirected to /foo.
-	// RedirectTrailingSlash is independent of this option.
-	RedirectFixedPath bool
+	// redirectTrailingSlash is independent of this option.
+	redirectFixedPath bool
+}
+
+// Option for Router
+type Option func(*Router)
+
+// WithDisableRedirectTrailingSlash disable automatic redirection if the current route can't be matched but a
+// value for the path with (without) the trailing slash exists
+// Default: enabled
+func WithDisableRedirectTrailingSlash() Option {
+	return func(r *Router) {
+		r.redirectTrailingSlash = false
+	}
+}
+
+// WithDisableRedirectFixedPath diable the router tries to fix the current request path, if no
+// value is registered for it.
+// Default: enabled
+func WithDisableRedirectFixedPath() Option {
+	return func(r *Router) {
+		r.redirectFixedPath = false
+	}
+}
+
+// WithSaveMatchedRoutePath adds the matched route path onto the Params.
+// The matched route path is only added to Params of routes that were
+// registered when this option was enabled.
+// Default: disable
+func WithSaveMatchedRoutePath() Option {
+	return func(r *Router) {
+		r.saveMatchedRoutePath = true
+	}
 }
 
 // New returns a new initialized Router.
 // Path auto-correction, including trailing slashes, is enabled by default.
-func New() *Router {
-	return &Router{
-		RedirectTrailingSlash: true,
-		RedirectFixedPath:     true,
+func New(opts ...Option) *Router {
+	r := &Router{
+		redirectTrailingSlash: true,
+		redirectFixedPath:     true,
 	}
+	for _, opt := range opts {
+		opt(r)
+	}
+	return r
 }
 
 // GET is a shortcut for router.Add(http.MethodGet, path, handle)
@@ -222,9 +261,10 @@ func (r *Router) Add(method, path string, value interface{}) *Router {
 		panic("value must not be nil")
 	}
 
-	// if r.SaveMatchedRoutePath {
-	// 	varsCount++
-	// }
+	if r.saveMatchedRoutePath {
+		value = matchValue{path, value}
+		varsCount++
+	}
 
 	if r.trees == nil {
 		r.trees = make(map[string]*node)
@@ -277,14 +317,24 @@ func (r *Router) Match(method, path string) (interface{}, Params, bool) {
 	if root := r.trees[method]; root != nil {
 		value, ps, tsr := root.getValue(path, r.paramsNew)
 		if value != nil {
+			if r.saveMatchedRoutePath {
+				vv, ok := value.(matchValue)
+				if !ok {
+					panic("enabled saveMatchedRoutePath, value should be matchValue struct")
+				}
+				if ps == nil {
+					return vv.Value, Params{Param{MatchedRoutePathParam, vv.matchedPath}}, true
+				}
+				*ps = append(*ps, Param{MatchedRoutePathParam, vv.matchedPath})
+				return vv.Value, *ps, true
+			}
 			if ps == nil {
-				// psp := r.paramsNew()
 				return value, nil, true
 			}
 			return value, *ps, true
 		}
 		if method != http.MethodConnect && path != "/" {
-			if tsr && r.RedirectTrailingSlash {
+			if tsr && r.redirectTrailingSlash {
 				if len(path) > 1 && path[len(path)-1] == '/' {
 					path = path[:len(path)-1]
 				} else {
@@ -293,8 +343,8 @@ func (r *Router) Match(method, path string) (interface{}, Params, bool) {
 				return r.Match(method, path)
 			}
 			// Try to fix the request path
-			if r.RedirectFixedPath {
-				fixedPath, found := root.findCaseInsensitivePath(CleanPath(path), r.RedirectTrailingSlash)
+			if r.redirectFixedPath {
+				fixedPath, found := root.findCaseInsensitivePath(CleanPath(path), r.redirectTrailingSlash)
 				if found {
 					return r.Match(method, fixedPath)
 				}

@@ -139,7 +139,7 @@ func TestRouterMatchRedirectTrailingSlash(t *testing.T) {
 	require.True(t, matched)
 }
 
-func TestRouterNotFound(t *testing.T) {
+func TestRouterRedirect(t *testing.T) {
 	router := New()
 	router.GET("/path", "/path")
 	router.GET("/dir/", "/dir/")
@@ -164,6 +164,36 @@ func TestRouterNotFound(t *testing.T) {
 			v, params, matched := router.Match(http.MethodGet, tt.path)
 			assert.True(t, matched)
 			assert.Equal(t, tt.location, v)
+			assert.Nil(t, params)
+		})
+	}
+}
+
+func TestRouterDisableRedirect(t *testing.T) {
+	router := New(WithDisableRedirectFixedPath(), WithDisableRedirectTrailingSlash())
+	router.GET("/path", "/path")
+	router.GET("/dir/", "/dir/")
+	router.GET("/", "/")
+
+	tests := []struct {
+		name     string
+		path     string
+		location string
+	}{
+		{"", "/path/", "/path"},   // TSR -/
+		{"", "/dir", "/dir/"},     // TSR +/
+		{"", "", "/"},             // TSR +/
+		{"", "/PATH", "/path"},    // Fixed Case
+		{"", "/DIR/", "/dir/"},    // Fixed Case
+		{"", "/PATH/", "/path"},   // Fixed Case -/
+		{"", "/DIR", "/dir/"},     // Fixed Case +/
+		{"", "/../path", "/path"}, // CleanPath
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v, params, matched := router.Match(http.MethodGet, tt.path)
+			assert.False(t, matched)
+			assert.Nil(t, v)
 			assert.Nil(t, params)
 		})
 	}
@@ -205,23 +235,35 @@ func TestRouterLookup(t *testing.T) {
 }
 
 func TestRouterMatchedRoutePath(t *testing.T) {
-	router := New()
+	router := New(WithSaveMatchedRoutePath())
 	router.Add(http.MethodGet, "/user/:name", "handle1")
 	router.Add(http.MethodGet, "/user/:name/details", "handle2")
 	router.Add(http.MethodGet, "/", "handle3")
 
 	v, params, matched := router.Match(http.MethodGet, "/user/gopher")
 	require.True(t, matched)
-	require.Equal(t, Params{Param{"name", "gopher"}}, params)
+	require.Equal(t, "/user/:name", params.MatchedRoutePath())
+	require.Equal(t, Params{Param{"name", "gopher"}, {MatchedRoutePathParam, "/user/:name"}}, params)
 	require.Equal(t, "handle1", v)
 
 	v, params, matched = router.Match(http.MethodGet, "/user/gopher/details")
 	require.True(t, matched)
-	require.Equal(t, Params{Param{"name", "gopher"}}, params)
+	require.Equal(t, "/user/:name/details", params.MatchedRoutePath())
+	require.Equal(t, Params{Param{"name", "gopher"}, {MatchedRoutePathParam, "/user/:name/details"}}, params)
 	require.Equal(t, "handle2", v)
 
 	v, params, matched = router.Match(http.MethodGet, "/")
 	require.True(t, matched)
-	require.Nil(t, params)
+	require.Equal(t, "/", params.MatchedRoutePath())
+	require.Equal(t, Params{{MatchedRoutePathParam, "/"}}, params)
 	require.Equal(t, "handle3", v)
+}
+
+func TestEnableSaveMatchedRouterPathPanicShouldNotHappen(t *testing.T) {
+	router := New()
+	router.Add(http.MethodGet, "/user/:name", "handle1")
+	router.saveMatchedRoutePath = true
+	require.Panics(t, func() {
+		router.Match(http.MethodGet, "/user/gopher")
+	})
 }
