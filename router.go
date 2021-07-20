@@ -312,10 +312,21 @@ func (r *Router) Lookup(method, path string) (interface{}, Params, bool) {
 	return nil, nil, false
 }
 
-// Match makes the router implement the http.Handler interface.
+// Match match method and path return matched or not and store value and url params.
 func (r *Router) Match(method, path string) (interface{}, Params, bool) {
+	return r.match(method, path, r.paramsNew)
+}
+
+// MatchURL match method and path return matched or not and store value and matched route path if Router.saveMatchedRoutePath enabled.
+func (r *Router) MatchURL(method, path string) (interface{}, string, bool) {
+	v, params, matched := r.match(method, path, nil)
+	return v, params.MatchedRoutePath(), matched
+}
+
+// match match method and path return matched or not and store value and url params.
+func (r *Router) match(method, path string, paramsNew func() *Params) (interface{}, Params, bool) {
 	if root := r.trees[method]; root != nil {
-		value, ps, tsr := root.getValue(path, r.paramsNew)
+		value, ps, tsr := root.getValue(path, paramsNew)
 		if value != nil {
 			if r.saveMatchedRoutePath {
 				vv, ok := value.(matchValue)

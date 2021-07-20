@@ -267,3 +267,41 @@ func TestEnableSaveMatchedRouterPathPanicShouldNotHappen(t *testing.T) {
 		router.Match(http.MethodGet, "/user/gopher")
 	})
 }
+
+func TestRouterMatchURL(t *testing.T) {
+	router := New()
+
+	router.GET("/GET/:name", "get")
+
+	v, matchPath, matched := router.MatchURL(http.MethodGet, "/GET/myName")
+	require.True(t, matched)
+	require.Equal(t, "", matchPath)
+	require.Equal(t, "get", v)
+}
+
+func TestRouterMatchURLEnableSaveMatchedRouterPath(t *testing.T) {
+	router := New(WithSaveMatchedRoutePath())
+
+	router.GET("/GET/:name", "get")
+
+	v, matchPath, matched := router.MatchURL(http.MethodGet, "/GET/myName")
+	require.True(t, matched)
+	require.Equal(t, "/GET/:name", matchPath)
+	require.Equal(t, "get", v)
+}
+
+func BenchmarkMatch(b *testing.B) {
+	router := New()
+	router.GET("/GET/:name", "get")
+	for i := 0; i < b.N; i++ {
+		router.Match(http.MethodGet, "/GET/myName")
+	}
+}
+
+func BenchmarkMatchURL(b *testing.B) {
+	router := New()
+	router.GET("/GET/:name", "get")
+	for i := 0; i < b.N; i++ {
+		router.MatchURL(http.MethodGet, "/GET/myName")
+	}
+}
