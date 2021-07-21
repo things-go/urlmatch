@@ -4,7 +4,6 @@ urlmatch is a trie match url. Copy from [httprouter](https://github.com/juliensc
 
 [![GoDoc](https://godoc.org/github.com/things-go/urlmatch?status.svg)](https://godoc.org/github.com/things-go/urlmatch)
 [![Go.Dev reference](https://img.shields.io/badge/go.dev-reference-blue?logo=go&logoColor=white)](https://pkg.go.dev/github.com/things-go/urlmatch?tab=doc)
-[![Build Status](https://www.travis-ci.com/things-go/urlmatch.svg?branch=main)](https://www.travis-ci.com/things-go/urlmatch)
 [![codecov](https://codecov.io/gh/things-go/urlmatch/branch/main/graph/badge.svg)](https://codecov.io/gh/things-go/urlmatch)
 ![Action Status](https://github.com/things-go/urlmatch/workflows/Go/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/things-go/urlmatch)](https://goreportcard.com/report/github.com/things-go/urlmatch)
