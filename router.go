@@ -349,7 +349,7 @@ func (r *Router) match(method, path string, paramsNew func() *Params) (interface
 				if len(path) > 1 && path[len(path)-1] == '/' {
 					path = path[:len(path)-1]
 				} else {
-					path = path + "/"
+					path += "/"
 				}
 				return r.Match(method, path)
 			}
