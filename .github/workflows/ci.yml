@@ -2,15 +2,9 @@ name: Tests
 
 on:
   push:
-    branches:
-      - main
-      - master
     paths-ignore:
       - '**.md'
   pull_request:
-    branches:
-      - main
-      - master
     paths-ignore:
       - '**.md'
 
@@ -20,7 +14,7 @@ env:
 
 jobs:
   build:
-    name: Test on Go
+    name: Test on ${{matrix.os}} @Go${{ matrix.go-version }}
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
