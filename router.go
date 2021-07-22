@@ -331,7 +331,7 @@ func (r *Router) match(method, path string, paramsNew func() *Params) (interface
 			if r.saveMatchedRoutePath {
 				vv, ok := value.(matchValue)
 				if !ok {
-					panic("enabled saveMatchedRoutePath, value should be matchValue struct")
+					panic("enabled saveMatchedRoutePath, value should be struct(matchValue)")
 				}
 				if ps == nil {
 					return vv.Value, Params{Param{MatchedRoutePathParam, vv.matchedPath}}, true
