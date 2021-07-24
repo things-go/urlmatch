@@ -115,78 +115,27 @@ func (ps Params) MatchedRoutePath() string {
 	return ps.Param(MatchedRoutePathParam)
 }
 
-// Router is a http.Handler which can be used to dispatch requests to different
-// handler functions via configurable routes
+// Router is a via configurable routes
 type Router struct {
 	trees map[string]*node
 
 	paramsNew func() *Params
 	maxParams uint16
 
-	// If enabled, adds the matched route path onto the Params.
-	// The matched route path is only added to Params of routes that were
-	// registered when this option was enabled.
-	saveMatchedRoutePath bool
-
-	// Enables automatic redirection if the current route can't be matched but a
-	// value for the path with (without) the trailing slash exists.
-	// For example if /foo/ is requested but a route only exists for /foo, the
-	// client is redirected to /foo with http status code 301 for GET requests
-	// and 308 for all other request methods.
-	redirectTrailingSlash bool
-
-	// If enabled, the router tries to fix the current request path, if no
-	// value is registered for it.
-	// First superfluous path elements like ../ or // are removed.
-	// Afterwards the router does a case-insensitive lookup of the cleaned path.
-	// If a value can be found for this route, the router makes a redirection
-	// to the corrected path with status code 301 for GET requests and 308 for
-	// all other request methods.
-	// For example /FOO and /..//Foo could be redirected to /foo.
-	// redirectTrailingSlash is independent of this option.
-	redirectFixedPath bool
-}
-
-// Option for Router
-type Option func(*Router)
-
-// WithDisableRedirectTrailingSlash disable automatic redirection if the current route can't be matched but a
-// value for the path with (without) the trailing slash exists
-// Default: enabled
-func WithDisableRedirectTrailingSlash() Option {
-	return func(r *Router) {
-		r.redirectTrailingSlash = false
-	}
-}
-
-// WithDisableRedirectFixedPath diable the router tries to fix the current request path, if no
-// value is registered for it.
-// Default: enabled
-func WithDisableRedirectFixedPath() Option {
-	return func(r *Router) {
-		r.redirectFixedPath = false
-	}
-}
-
-// WithSaveMatchedRoutePath adds the matched route path onto the Params.
-// The matched route path is only added to Params of routes that were
-// registered when this option was enabled.
-// Default: disable
-func WithSaveMatchedRoutePath() Option {
-	return func(r *Router) {
-		r.saveMatchedRoutePath = true
-	}
+	Options
 }
 
 // New returns a new initialized Router.
 // Path auto-correction, including trailing slashes, is enabled by default.
 func New(opts ...Option) *Router {
 	r := &Router{
-		redirectTrailingSlash: true,
-		redirectFixedPath:     true,
+		Options: Options{
+			redirectTrailingSlash: true,
+			redirectFixedPath:     true,
+		},
 	}
 	for _, opt := range opts {
-		opt(r)
+		opt(&r.Options)
 	}
 	return r
 }

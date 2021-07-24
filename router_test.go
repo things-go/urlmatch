@@ -5,7 +5,6 @@
 package urlmatch
 
 import (
-	"fmt"
 	"net/http"
 	"reflect"
 	"testing"
@@ -84,7 +83,7 @@ func TestRouterMach(t *testing.T) {
 	require.True(t, matched)
 	require.Nil(t, params)
 	require.Equal(t, value, "options")
-	fmt.Println()
+
 	value, params, matched = router.Match(http.MethodPost, "/POST")
 	require.True(t, matched)
 	require.Nil(t, params)
@@ -259,7 +258,7 @@ func TestRouterMatchedRoutePath(t *testing.T) {
 	require.Equal(t, "handle3", v)
 }
 
-func TestEnableSaveMatchedRouterPathPanicShouldNotHappen(t *testing.T) {
+func TestRouterEnableSaveMatchedRouterPathPanicShouldNotHappen(t *testing.T) {
 	router := New()
 	router.Add(http.MethodGet, "/user/:name", "handle1")
 	router.saveMatchedRoutePath = true
