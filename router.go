@@ -219,13 +219,13 @@ func (r *Router) Add(method, path string, value interface{}) *Router {
 		r.trees = make(map[string]*node)
 	}
 
-	root := r.trees[method]
-	if root == nil {
-		root = new(node)
-		r.trees[method] = root
+	rt := r.trees[method]
+	if rt == nil {
+		rt = new(node)
+		r.trees[method] = rt
 	}
 
-	root.addRoute(path, value)
+	rt.addRoute(path, value)
 
 	// Update maxParams
 	if paramsCount := countParams(path); paramsCount+varsCount > r.maxParams {
